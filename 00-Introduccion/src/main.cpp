@@ -81,6 +81,9 @@ Model modelDartLegoLeftHand;
 Model modelDartLegoRightHand;
 Model modelDartLegoLeftLeg;
 Model modelDartLegoRightLeg;
+// Practica 1, punto 1. Modelos agregados.
+Model modelArbolNavidad;
+// ---------------------------------------
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
 GLuint skyboxTextureID;
@@ -111,6 +114,9 @@ glm::mat4 modelMatrixHeli = glm::mat4(1.0f);
 glm::mat4 modelMatrixLambo = glm::mat4(1.0);
 glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
 glm::mat4 modelMatrixDart = glm::mat4(1.0f);
+// Practica 1, punto 1. Modelos agregados.
+glm::mat4 modelMatrixArbolNavidad = glm::mat4(1.0f);
+// ---------------------------------------
 
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 int modelSelected = 0;
@@ -239,6 +245,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	modelAircraft.loadModel("../models/Aircraft_obj/E 45 Aircraft_obj.obj");
 	modelAircraft.setShader(&shaderMulLighting);
+
+	// Practica 1, punto 1. Modelos agregados.
+	modelArbolNavidad.loadModel("../models/arbol_navidad/arbol_navidad.obj");
+	// ---------------------------------------
 
 	// Eclipse
 	modelEclipseChasis.loadModel("../models/Eclipse/2003eclipse_chasis.obj");
@@ -492,6 +502,9 @@ void destroy() {
 	modelLamboRearRightWheel.destroy();
 	modelLamboRightDor.destroy();
 	modelRock.destroy();
+	// Practica 1, punto 1. Modelos agregados.
+	modelArbolNavidad.destroy();
+	// ---------------------------------------
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -681,6 +694,10 @@ void applicationLoop() {
 	modelMatrixLambo = glm::translate(modelMatrixLambo, glm::vec3(23.0, 0.0, 0.0));
 
 	modelMatrixDart = glm::translate(modelMatrixDart, glm::vec3(3.0, 0.0, 20.0));
+
+	// Practica 1, punto 1. Modelos agregados.
+	modelMatrixArbolNavidad = glm::translate(modelMatrixArbolNavidad, glm::vec3(0.0, 0.0, 0.0));
+	// ---------------------------------------
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -873,6 +890,10 @@ void applicationLoop() {
 		 *******************************************/
 		//Rock render
 		modelRock.render(matrixModelRock);
+		// Practica 1, punto 1. Modelos agregados.
+		modelArbolNavidad.render(modelMatrixArbolNavidad);
+		// ---------------------------------------
+
 		// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
 		glActiveTexture(GL_TEXTURE0);
 
