@@ -248,6 +248,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	// Practica 1, punto 1. Modelos agregados.
 	modelArbol.loadModel("../models/arbol/arbol.obj");
+	modelArbol.setShader(&shaderMulLighting);
 	// ---------------------------------------
 
 	// Eclipse
@@ -890,7 +891,7 @@ void applicationLoop() {
 		 *******************************************/
 		//Rock render
 		modelRock.render(matrixModelRock);
-		
+
 		// Practica 1, punto 1. Modelos agregados.
 		modelArbol.render(modelMatrixArbol);
 		// ---------------------------------------
