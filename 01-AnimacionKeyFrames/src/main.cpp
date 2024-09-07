@@ -253,7 +253,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelArbol.setShader(&shaderMulLighting);
 	
 	modelCiudad.loadModel("../models/ciudad_normal/ciudad_normal.obj");
-	modelCiudad.setShader(&shaderMulLighting)
+	modelCiudad.setShader(&shaderMulLighting);
 	// ---------------------------------------
 
 	// Eclipse
@@ -704,8 +704,8 @@ void applicationLoop() {
 	modelMatrixDart = glm::translate(modelMatrixDart, glm::vec3(3.0, 0.0, 20.0));
 
 	// Practica 1, punto 1. Modelos agregados.
-	modelMatrixArbol = glm::translate(modelMatrixArbol, glm::vec3(0.0, 0.0, -5.0));
-	modelMatrixCiudad = glm::translate(modelMatrixCiudad, glm::vec3(-2.0, 0.0, -5.0));
+	modelMatrixArbol = glm::translate(modelMatrixArbol, glm::vec3(10.0, 0.0, 30.0));
+	modelMatrixCiudad = glm::translate(modelMatrixCiudad, glm::vec3(-10.0, 0.2, 30.0));
 	// ---------------------------------------
 
 	// Variables to interpolation key frames
@@ -903,7 +903,7 @@ void applicationLoop() {
 		// Practica 1, punto 1. Modelos agregados.
 		modelArbol.render(modelMatrixArbol);
 		glm::mat4 modelMatrixCiudadMini = glm::mat4(modelMatrixCiudad);
-		modelMatrixCiudadMini = glm::scale(modelMatrixCiudad, glm::vec3(0.5, 0.5, 0.5));
+		modelMatrixCiudadMini = glm::scale(modelMatrixCiudad, glm::vec3(0.05, 0.05, 0.05));
 		modelCiudad.render(modelMatrixCiudadMini);
 		// ---------------------------------------
 
