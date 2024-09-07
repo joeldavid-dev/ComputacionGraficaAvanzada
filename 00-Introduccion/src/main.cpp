@@ -82,7 +82,7 @@ Model modelDartLegoRightHand;
 Model modelDartLegoLeftLeg;
 Model modelDartLegoRightLeg;
 // Practica 1, punto 1. Modelos agregados.
-Model modelArbolNavidad;
+Model modelArbol;
 // ---------------------------------------
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
@@ -115,7 +115,7 @@ glm::mat4 modelMatrixLambo = glm::mat4(1.0);
 glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
 glm::mat4 modelMatrixDart = glm::mat4(1.0f);
 // Practica 1, punto 1. Modelos agregados.
-glm::mat4 modelMatrixArbolNavidad = glm::mat4(1.0f);
+glm::mat4 modelMatrixArbol = glm::mat4(1.0f);
 // ---------------------------------------
 
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
@@ -247,7 +247,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelAircraft.setShader(&shaderMulLighting);
 
 	// Practica 1, punto 1. Modelos agregados.
-	modelArbolNavidad.loadModel("../models/arbol_navidad/arbol_navidad.obj");
+	modelArbol.loadModel("../models/arbol/arbol.obj");
 	// ---------------------------------------
 
 	// Eclipse
@@ -503,7 +503,7 @@ void destroy() {
 	modelLamboRightDor.destroy();
 	modelRock.destroy();
 	// Practica 1, punto 1. Modelos agregados.
-	modelArbolNavidad.destroy();
+	modelArbol.destroy();
 	// ---------------------------------------
 
 	// Textures Delete
@@ -696,7 +696,7 @@ void applicationLoop() {
 	modelMatrixDart = glm::translate(modelMatrixDart, glm::vec3(3.0, 0.0, 20.0));
 
 	// Practica 1, punto 1. Modelos agregados.
-	modelMatrixArbolNavidad = glm::translate(modelMatrixArbolNavidad, glm::vec3(0.0, 0.0, 0.0));
+	modelMatrixArbol = glm::translate(modelMatrixArbol, glm::vec3(0.0, 0.0, 0.0));
 	// ---------------------------------------
 
 	// Variables to interpolation key frames
@@ -890,8 +890,9 @@ void applicationLoop() {
 		 *******************************************/
 		//Rock render
 		modelRock.render(matrixModelRock);
+		
 		// Practica 1, punto 1. Modelos agregados.
-		modelArbolNavidad.render(modelMatrixArbolNavidad);
+		modelArbol.render(modelMatrixArbol);
 		// ---------------------------------------
 
 		// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
