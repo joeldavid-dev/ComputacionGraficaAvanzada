@@ -57,6 +57,10 @@ uniform vec3 viewPos;
 uniform vec2 scaleUV;  
   
 uniform sampler2D backgroundTexture;
+uniform sampler2D rTexture;
+uniform sampler2D gTexture;
+uniform sampler2D bTexture;
+uniform sampler2D blendMapTexture;
 
 vec3 calculateDirectionalLight(Light light, vec3 direction){
 	vec2 tiledCoords = our_uv;

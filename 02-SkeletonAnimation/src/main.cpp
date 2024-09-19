@@ -90,6 +90,10 @@ Model modelBuzzLeftArm;
 Model modelBuzzLeftForeArm;
 Model modelBuzzLeftHand;
 
+// Modelos animados
+// Among us (practica 2)
+Model modelAmongUsAnimate;
+
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
 GLuint skyboxTextureID;
 
@@ -120,6 +124,9 @@ glm::mat4 modelMatrixLambo = glm::mat4(1.0);
 glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
 glm::mat4 modelMatrixDart = glm::mat4(1.0f);
 glm::mat4 modelMatrixBuzz = glm::mat4(1.0f);
+// Practica 2
+glm::mat4 modelMatrixAmongUs = glm::mat4(1.0f);
+int amongUsAnimationIndex = 1;
 
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 float rotBuzzHead = 0.0, rotBuzzLeftarm = 0.0, rotBuzzLeftForeArm = 0.0, rotBuzzLeftHand = 0.0;
@@ -183,7 +190,9 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow *window, int button, int state, int mod);
 void init(int width, int height, std::string strTitle, bool bFullScreen);
 void destroy();
+
 bool processInput(bool continueApplication = true);
+
 
 // Implementacion de todas las funciones.
 void init(int width, int height, std::string strTitle, bool bFullScreen) {
@@ -331,6 +340,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelBuzzLeftForeArm.setShader(&shaderMulLighting);
 	modelBuzzLeftHand.loadModel("../models/buzz/buzzlightyLeftHand.obj");
 	modelBuzzLeftHand.setShader(&shaderMulLighting);
+
+	// Among us (practica 2)
+	modelAmongUsAnimate.loadModel("../models/amongUS/AmongUS.fbx");
+	modelAmongUsAnimate.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 	
@@ -543,6 +556,9 @@ void destroy() {
 	modelBuzzLeftForeArm.destroy();
 	modelBuzzLeftHand.destroy();
 	modelBuzzTorso.destroy();
+	// Among us (practica 2)
+	modelAmongUsAnimate.destroy();
+
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -748,6 +764,24 @@ bool processInput(bool continueApplication) {
 	else if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		modelMatrixBuzz = glm::translate(modelMatrixBuzz, glm::vec3(0.0, 0.0, -0.02));
 
+	// Among us (practica 2)
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		modelMatrixAmongUs = glm::rotate(modelMatrixAmongUs, 0.1f, glm::vec3(0, 1, 0));
+		amongUsAnimationIndex = 0;
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		modelMatrixAmongUs = glm::rotate(modelMatrixAmongUs, -0.1f, glm::vec3(0, 1, 0));
+		amongUsAnimationIndex = 0;
+	}
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		modelMatrixAmongUs = glm::translate(modelMatrixAmongUs, glm::vec3(0.0, 0.0, 0.1));
+		amongUsAnimationIndex = 0;
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		modelMatrixAmongUs = glm::translate(modelMatrixAmongUs, glm::vec3(0.0, 0.0, -0.1));
+		amongUsAnimationIndex = 0;
+	}
+
 	glfwPollEvents();
 	return continueApplication;
 }
@@ -776,6 +810,9 @@ void applicationLoop() {
 	modelMatrixDart = glm::translate(modelMatrixDart, glm::vec3(3.0, 0.0, 20.0));
 
 	modelMatrixBuzz = glm::translate(modelMatrixBuzz, glm::vec3(15.0, 0.0, -10.0));
+
+	// Among us (practica 2)
+	modelMatrixAmongUs = glm::translate(modelMatrixAmongUs, glm::vec3(5.0, 0.0, 5.0));
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -1111,6 +1148,13 @@ void applicationLoop() {
 		modelMatrixLeftHand = glm::rotate(modelMatrixLeftHand, glm::radians(-45.0f), glm::vec3(0, 1, 0));
 		modelMatrixLeftHand = glm::translate(modelMatrixLeftHand, glm::vec3(-0.416066, -0.587046, -0.076258));
 		modelBuzzLeftHand.render(modelMatrixLeftHand);
+
+		// Among us (practica 2)
+		glm::mat4 modelMatrixAmongUsBody = glm::mat4(modelMatrixAmongUs);
+		modelMatrixAmongUsBody = glm::scale(modelMatrixAmongUsBody, glm::vec3(0.1f));
+		modelAmongUsAnimate.setAnimationIndex(amongUsAnimationIndex);
+		modelAmongUsAnimate.render(modelMatrixAmongUsBody);
+		amongUsAnimationIndex = 1;
 
 		/*******************************************
 		 * Skybox
