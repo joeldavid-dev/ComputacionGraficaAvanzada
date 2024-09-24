@@ -94,6 +94,10 @@ Model modelBuzzHead;
 Model modelBuzzLeftArm;
 Model modelBuzzLeftForeArm;
 Model modelBuzzLeftHand;
+// Lamps (clase)
+Model modelLamp1;
+Model modelLamp2;
+Model modelLamp2Post;
 // Modelos animados
 // Mayow
 Model mayowModelAnimate;
@@ -189,6 +193,23 @@ float rotHelHelBack = 0.0;
 // Var animate lambo dor
 int stateDoor = 0;
 float dorRotCount = 0.0;
+
+// Arreglo de las posiciones de las lamparas (clase)
+std::vector<glm::vec3> lamp1Position = {
+	glm::vec3(-7.0, 0, -19.1),
+	glm::vec3(24.4, 0, -34.5),
+	glm::vec3(-10.25, 0, -54.1),
+};
+std::vector<float> lamp1Orientation = {
+	-17.0, -82, 23.0
+};
+std::vector<glm::vec3> lamp2Position = {
+	glm::vec3(-36.5, 0, -23.4),
+	glm::vec3(-52.4, 0, -4),
+};
+std::vector<float> lamp2Orientation = {
+	21.37+90, -65.0+90
+};
 
 double deltaTime;
 double currTime, lastTime;
@@ -354,6 +375,14 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelBuzzLeftForeArm.setShader(&shaderMulLighting);
 	modelBuzzLeftHand.loadModel("../models/buzz/buzzlightyLeftHand.obj");
 	modelBuzzLeftHand.setShader(&shaderMulLighting);
+
+	// Carga de modelos de la lampara (clase)
+	modelLamp1.loadModel("../models/Street-Lamp-Black/objLamp.obj");
+	modelLamp1.setShader(&shaderMulLighting);
+	modelLamp2.loadModel("../models/Street-Light/Lamp.obj");
+	modelLamp2.setShader(&shaderMulLighting);
+	modelLamp2Post.loadModel("../models/Street-Light/LampPost.obj");
+	modelLamp2Post.setShader(&shaderMulLighting);
 
 	// Mayow
 	mayowModelAnimate.loadModel("../models/mayow/personaje2.fbx");
@@ -668,6 +697,10 @@ void destroy() {
 	cowboyModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
+
+	modelLamp1.destroy();
+	modelLamp2.destroy();
+	modelLamp2Post.destroy();
 
 	// Terrains objects Delete
 	terrain.destroy();
@@ -1011,9 +1044,21 @@ void applicationLoop() {
 		/*******************************************
 		 * Propiedades PointLights
 		 *******************************************/
-		shaderMulLighting.setInt("pointLightCount", 0);
-		shaderTerrain.setInt("pointLightCount", 0);
+		shaderMulLighting.setInt("pointLightCount", lamp1Position.size() + lamp2Position.size());
+		shaderTerrain.setInt("pointLightCount", lamp1Position.size() + lamp2Position.size());
 
+		// Propiedades agregadas en clase
+		for (int i = 0; i < lamp1Position.size(); i++){
+			glm::mat4 matAux = glm::mat4(1.0);
+			matAux = glm::translate(matAux, lamp1Position[i]);
+			matAux = glm::rotate(matAux, glm::radians(lamp1Orientation[i]), glm::vec3(0, 1, 0));
+			matAux = glm::scale(matAux, glm::vec3(0.5));
+			matAux = glm::translate(matAux, glm::vec3(0, 10.34, 0));
+			glm::vec3 lampPosition = matAux[3];
+			shaderMulLighting.setVectorFloat3("pointLiights[" + std::to_string(i) + "].position",
+			glm::value_ptr(lampPosition));
+			shaderMulLighting.setFloat();
+		}
 		/*******************************************
 		 * Terrain Cesped
 		 *******************************************/
@@ -1106,6 +1151,27 @@ void applicationLoop() {
 		// Se regresa el cull faces IMPORTANTE para las puertas
 		glEnable(GL_CULL_FACE);
 
+		// render de la lampara 1
+		for (unsigned int i = 0; i < lamp1Position.size(); i++){
+			lamp1Position[i].y = terrain.getHeightTerrain(lamp1Position[i].x, lamp1Position[i].z);
+			modelLamp1.setPosition(lamp1Position[i]);
+			modelLamp1.setOrientation(glm::vec3(0, lamp1Orientation[i], 0));
+			modelLamp1.setScale(glm::vec3(0.5));
+			modelLamp1.render();
+		}
+		// render de la lampara 2
+		for (unsigned int i = 0; i < lamp2Position.size(); i++){
+			lamp2Position[i].y = terrain.getHeightTerrain(lamp2Position[i].x, lamp2Position[i].z);
+			modelLamp2.setPosition(lamp2Position[i]);
+			modelLamp2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
+			modelLamp2.setScale(glm::vec3(1.0));
+			modelLamp2.render();
+			modelLamp2Post.setPosition(lamp2Position[i]);
+			modelLamp2Post.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
+			modelLamp2Post.setScale(glm::vec3(1.0));
+			modelLamp2Post.render();
+
+		}
 		// Dart lego
 		// Se deshabilita el cull faces IMPORTANTE para la capa
 		glDisable(GL_CULL_FACE);
