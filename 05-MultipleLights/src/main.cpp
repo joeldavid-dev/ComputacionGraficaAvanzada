@@ -1057,7 +1057,7 @@ void applicationLoop() {
 			glm::vec3 lampPosition = matAux[3];
 			shaderMulLighting.setVectorFloat3("pointLiights[" + std::to_string(i) + "].position",
 			glm::value_ptr(lampPosition));
-			shaderMulLighting.setFloat();
+			//shaderMulLighting.setFloat();
 		}
 		/*******************************************
 		 * Terrain Cesped
