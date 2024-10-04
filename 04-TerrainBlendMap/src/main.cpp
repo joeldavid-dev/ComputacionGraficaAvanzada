@@ -50,7 +50,7 @@ Shader shader;
 Shader shaderSkybox;
 //Shader con multiples luces
 Shader shaderMulLighting;
-//Shader del terreno
+//Shader del terreno (practica 4)
 Shader shaderTerrain;
 
 std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
@@ -269,6 +269,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	shader.initialize("../Shaders/colorShader.vs", "../Shaders/colorShader.fs");
 	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox.fs");
 	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation.vs", "../Shaders/multipleLights.fs");
+	// (practica 4)
 	shaderTerrain.initialize("../Shaders/terrain.vs", "../Shaders/terrain.fs");
 
 	// Inicializacion de los objetos.
@@ -380,7 +381,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelAmongUsAnimate.loadModel("../models/amongUS/AmongUS.fbx");
 	modelAmongUsAnimate.setShader(&shaderMulLighting);
 
-	// Terreno
+	// Terreno (practica 4)
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
 
@@ -544,7 +545,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Fallo la carga de textura" << std::endl;
 	textureLandingPad.freeImage(); // Liberamos memoria
 
-	// Definiendo texturas del mapa de mezclas
+	// Definiendo texturas del mapa de mezclas (practica 4)
 	// rojo
 	Texture textureR("../Textures/mud.png");
 	textureR.loadImage(); // Cargar la textura
@@ -632,6 +633,7 @@ void destroy() {
 	shader.destroy();
 	shaderMulLighting.destroy();
 	shaderSkybox.destroy();
+	// (practica 4)
 	shaderTerrain.destroy();
 
 	// Basic objects Delete
@@ -1013,7 +1015,7 @@ void applicationLoop() {
 		shaderMulLighting.setMatrix4("view", 1, false,
 				glm::value_ptr(view));
 		
-		// Settea la matriz de vista y projection al shader con multiples luces
+		// Settea la matriz de vista y projection al shader del terreno (practica 4)
 		shaderTerrain.setMatrix4("projection", 1, false,
 					glm::value_ptr(projection));
 		shaderTerrain.setMatrix4("view", 1, false,
@@ -1028,6 +1030,7 @@ void applicationLoop() {
 		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.9, 0.9, 0.9)));
 		shaderMulLighting.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
 
+		// (practica 4)
 		shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
 		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.7, 0.7, 0.7)));
@@ -1038,18 +1041,19 @@ void applicationLoop() {
 		 * Propiedades SpotLights
 		 *******************************************/
 		shaderMulLighting.setInt("spotLightCount", 0);
+		// (practica 4)
 		shaderTerrain.setInt("spotLightCount", 0);
 
 		/*******************************************
 		 * Propiedades PointLights
 		 *******************************************/
 		shaderMulLighting.setInt("pointLightCount", 0);
+		// (practica 4)
 		shaderTerrain.setInt("pointLightCount", 0);
 		
 		/*******************************************
 		 * Terrain Cesped (practica 4)
 		 *******************************************/
-
 		// Se activa la textura del cesped
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureCespedID);
