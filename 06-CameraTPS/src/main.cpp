@@ -21,7 +21,7 @@
 #include "Headers/Cylinder.h"
 #include "Headers/Box.h"
 #include "Headers/FirstPersonCamera.h"
-#include "Headers/ThirdPersonCamera.h"
+#include "Headers/ThirdPersonCamera.h" // agregado en clase
 
 //GLM include
 #define GLM_FORCE_RADIANS
@@ -54,6 +54,7 @@ Shader shaderMulLighting;
 //Shader para el terreno
 Shader shaderTerrain;
 
+// Cámara (practica 6)
 //std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
 std::shared_ptr<Camera> camera(new ThirdPersonCamera());
 float distanceFromPlayer = 6.5;
@@ -104,16 +105,17 @@ Model modelLamp1;
 Model modelLamp2;
 Model modelLampPost2;
 // Modelos animados
-// Mayow
-Model mayowModelAnimate;
 // Cowboy
 Model cowboyModelAnimate;
 // Guardian con lampara
 Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
+// Among us (practica 6)
+Model amongUsModelAnimate;
+
 // Terrain model instance
-Terrain terrain(-1, -1, 200, 8, "../Textures/heightmap.png");
+Terrain terrain(-1, -1, 200, 20, "../Textures/heightmap.png");
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
 GLuint textureTerrainRID, textureTerrainGID, textureTerrainBID, textureTerrainBlendMapID;
@@ -146,12 +148,13 @@ glm::mat4 modelMatrixLambo = glm::mat4(1.0);
 glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
 glm::mat4 modelMatrixDart = glm::mat4(1.0f);
 glm::mat4 modelMatrixBuzz = glm::mat4(1.0f);
-glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixCowboy = glm::mat4(1.0f);
 glm::mat4 modelMatrixGuardian = glm::mat4(1.0f);
 glm::mat4 modelMatrixCyborg = glm::mat4(1.0f);
+// Among us (practica 6)
+glm::mat4 modelMatrixAmongUs = glm::mat4(1.0f);
+int amongUsAnimationIndex = 1;
 
-int animationMayowIndex = 1;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 float rotBuzzHead = 0.0, rotBuzzLeftarm = 0.0, rotBuzzLeftForeArm = 0.0, rotBuzzLeftHand = 0.0;
 int modelSelected = 0;
@@ -227,7 +230,7 @@ const float giroEclipse = 0.5f;
 void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes);
 void keyCallback(GLFWwindow *window, int key, int scancode, int action,
 		int mode);
-void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);
+void scrollCallback(GLFWwindow *window, double xoffset, double yoffset); // agregado en clase
 void mouseCallback(GLFWwindow *window, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow *window, int button, int state, int mod);
 void init(int width, int height, std::string strTitle, bool bFullScreen);
@@ -271,7 +274,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
-	glfwSetScrollCallback(window, scrollCallback);
+	glfwSetScrollCallback(window, scrollCallback); // agregado en clase
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
 	// Init glew
@@ -390,10 +393,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelLamp2.setShader(&shaderMulLighting);
 	modelLampPost2.loadModel("../models/Street_Light/LampPost.obj");
 	modelLampPost2.setShader(&shaderMulLighting);
-
-	// Mayow
-	mayowModelAnimate.loadModel("../models/mayow/personaje2.fbx");
-	mayowModelAnimate.setShader(&shaderMulLighting);
 	
 	// Cowboy
 	cowboyModelAnimate.loadModel("../models/cowboy/Character Running.fbx");
@@ -406,6 +405,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Cyborg
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
+
+	// Among us (practica 6)
+	amongUsModelAnimate.loadModel("../models/amongUS/AmongUS.fbx");
+	amongUsModelAnimate.setShader(&shaderMulLighting);
 
 	// Terreno
 	terrain.init();
@@ -703,10 +706,11 @@ void destroy() {
 	modelLamp1.destroy();
 	modelLamp2.destroy();
 	modelLampPost2.destroy();
-	mayowModelAnimate.destroy();
 	cowboyModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
+	// Among us (practica 6)
+	amongUsModelAnimate.destroy();
 
 	// Terrains objects Delete
 	terrain.destroy();
@@ -745,7 +749,8 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action,
 	}
 }
 
-void scrollCallback(GLFWwindow *window, double xoffset, double yoffset){
+// agregado en clase
+void scrollCallback(GLFWwindow *window, double xoffset, double yoffset){ 
 	distanceFromPlayer -= yoffset;
 	camera->setDistanceFromTarget(distanceFromPlayer);
 }
@@ -789,6 +794,7 @@ bool processInput(bool continueApplication) {
 		camera->moveRightCamera(true, deltaTime);
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		camera->mouseMoveCamera(offsetX, offsetY, deltaTime);*/
+	// movimiento de cámara (practica 6)
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT))
 		camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT))
@@ -928,23 +934,22 @@ bool processInput(bool continueApplication) {
 	else if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		modelMatrixBuzz = glm::translate(modelMatrixBuzz, glm::vec3(0.0, 0.0, -0.02));
 
-	// Controles de mayow
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
-		angleTarget += 0.02f;
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, 0.02f, glm::vec3(0, 1, 0));
-		animationMayowIndex = 0;
-	} else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
-		angleTarget -= 0.02f;
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, -0.02f, glm::vec3(0, 1, 0));
-		animationMayowIndex = 0;
+	// Among us (practica 6)
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		modelMatrixAmongUs = glm::rotate(modelMatrixAmongUs, 0.1f, glm::vec3(0, 1, 0));
+		amongUsAnimationIndex = 0;
 	}
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, 0.02));
-		animationMayowIndex = 0;
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		modelMatrixAmongUs = glm::rotate(modelMatrixAmongUs, -0.1f, glm::vec3(0, 1, 0));
+		amongUsAnimationIndex = 0;
 	}
-	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, -0.02));
-		animationMayowIndex = 0;
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		modelMatrixAmongUs = glm::translate(modelMatrixAmongUs, glm::vec3(0.0, 0.0, 0.2));
+		amongUsAnimationIndex = 0;
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		modelMatrixAmongUs = glm::translate(modelMatrixAmongUs, glm::vec3(0.0, 0.0, -0.2));
+		amongUsAnimationIndex = 0;
 	}
 
 	glfwPollEvents();
@@ -976,15 +981,15 @@ void applicationLoop() {
 
 	modelMatrixBuzz = glm::translate(modelMatrixBuzz, glm::vec3(15.0, 0.0, -10.0));
 
-	modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(13.0f, 0.05f, -5.0f));
-	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-90.0f), glm::vec3(0, 1, 0));
-
 	modelMatrixCowboy = glm::translate(modelMatrixCowboy, glm::vec3(13.0, 0.05, 0.0));
 
 	modelMatrixGuardian = glm::translate(modelMatrixGuardian, glm::vec3(15, 0.05, 0.0));
 	modelMatrixGuardian = glm::rotate(modelMatrixGuardian, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 
 	modelMatrixCyborg = glm::translate(modelMatrixCyborg, glm::vec3(5.0f, 0.05, 0.0f));
+
+	// Among us (practica 6)
+	modelMatrixAmongUs = glm::translate(modelMatrixAmongUs, glm::vec3(5.0, 0.0, 5.0));
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -995,6 +1000,7 @@ void applicationLoop() {
 
 	lastTime = TimeManager::Instance().GetTime();
 
+	// agregado en clase
 	camera->setSensitivity(1.2);
 	camera->setDistanceFromTarget(distanceFromPlayer);
 
@@ -1016,16 +1022,19 @@ void applicationLoop() {
 		std::vector<glm::mat4> matrixBuzz;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f),
-				(float) screenWidth / (float) screenHeight, 0.01f, 100.0f);
+		// Seleccion de modelo que enfocará la cámara (practica 6)
 		if (modelSelected == 1)
 			positionTarget = modelMatrixDart[3];
 		else if (modelSelected == 2 || modelSelected == 0)
-			positionTarget = modelMatrixMayow[3];
+			positionTarget = modelMatrixAmongUs[3];
 		camera->setCameraTarget(positionTarget);
 		camera->setAngleTarget(angleTarget);
 		camera->updateCamera();
 		glm::mat4 view = camera->getViewMatrix();
+
+		//proyección
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f),
+				(float) screenWidth / (float) screenHeight, 0.01f, 100.0f);
 
 		// Settea la matriz de vista y projection al shader con solo color
 		shader.setMatrix4("projection", 1, false, glm::value_ptr(projection));
@@ -1051,13 +1060,13 @@ void applicationLoop() {
 		 * Propiedades Luz direccional
 		 *******************************************/
 		shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
+		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.4, 0.4, 0.4)));
 		shaderMulLighting.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
 
 		shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.4, 0.4, 0.4)));
 		shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
@@ -1337,19 +1346,20 @@ void applicationLoop() {
 		/*****************************************
 		 * Objetos animados por huesos
 		 * **************************************/
-		glm::vec3 ejey = glm::normalize(terrain.getNormalTerrain(modelMatrixMayow[3][0], modelMatrixMayow[3][2]));
-		glm::vec3 ejex = glm::vec3(modelMatrixMayow[0]);
+		// Among us (practica 6)
+		glm::vec3 ejey = glm::normalize(terrain.getNormalTerrain(modelMatrixAmongUs[3][0], modelMatrixAmongUs[3][2]));
+		glm::vec3 ejex = glm::vec3(modelMatrixAmongUs[0]);
 		glm::vec3 ejez = glm::normalize(glm::cross(ejex, ejey));
 		ejex = glm::normalize(glm::cross(ejey, ejez));
-		modelMatrixMayow[0] = glm::vec4(ejex, 0.0);
-		modelMatrixMayow[1] = glm::vec4(ejey, 0.0);
-		modelMatrixMayow[2] = glm::vec4(ejez, 0.0);
-		modelMatrixMayow[3][1] = terrain.getHeightTerrain(modelMatrixMayow[3][0], modelMatrixMayow[3][2]);
-		glm::mat4 modelMatrixMayowBody = glm::mat4(modelMatrixMayow);
-		modelMatrixMayowBody = glm::scale(modelMatrixMayowBody, glm::vec3(0.021f));
-		mayowModelAnimate.setAnimationIndex(animationMayowIndex);
-		mayowModelAnimate.render(modelMatrixMayowBody);
-		animationMayowIndex = 1;
+		modelMatrixAmongUs[0] = glm::vec4(ejex, 0.0);
+		modelMatrixAmongUs[1] = glm::vec4(ejey, 0.0);
+		modelMatrixAmongUs[2] = glm::vec4(ejez, 0.0);
+		modelMatrixAmongUs[3][1] = terrain.getHeightTerrain(modelMatrixAmongUs[3][0], modelMatrixAmongUs[3][2]);
+		glm::mat4 modelMatrixAmongUsBody = glm::mat4(modelMatrixAmongUs);
+		modelMatrixAmongUsBody = glm::scale(modelMatrixAmongUsBody, glm::vec3(0.1f));
+		amongUsModelAnimate.setAnimationIndex(amongUsAnimationIndex);
+		amongUsModelAnimate.render(modelMatrixAmongUsBody);
+		amongUsAnimationIndex = 1;
 
 		modelMatrixCowboy[3][1] = terrain.getHeightTerrain(modelMatrixCowboy[3][0], modelMatrixCowboy[3][2]);
 		glm::mat4 modelMatrixCowboyBody = glm::mat4(modelMatrixCowboy);
