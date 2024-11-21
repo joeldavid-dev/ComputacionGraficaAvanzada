@@ -21,7 +21,7 @@
 #include "Headers/Cylinder.h"
 #include "Headers/Box.h"
 #include "Headers/FirstPersonCamera.h"
-#include "Headers/ThirdPersonCamera.h" // agregado en clase
+#include "Headers/ThirdPersonCamera.h" // agregado en clase (practica 6)
 
 //GLM include
 #define GLM_FORCE_RADIANS
@@ -41,6 +41,9 @@
 
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
+// variables para el cambio de camara (practica 6)
+bool isFPC = false, enableSwitchCam = true;
+
 int screenWidth;
 int screenHeight;
 
@@ -54,11 +57,11 @@ Shader shaderMulLighting;
 //Shader para el terreno
 Shader shaderTerrain;
 
-// Cámara (practica 6)
-//std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
-std::shared_ptr<Camera> camera(new ThirdPersonCamera());
+// Cámaras (practica 6)
+std::shared_ptr<FirstPersonCamera> FP_Camera(new FirstPersonCamera());
+std::shared_ptr<Camera> TP_Camera(new ThirdPersonCamera());
 float distanceFromPlayer = 6.5;
-float angleTarget = -90.0;
+float angleTarget = 0.0;
 glm::vec3 positionTarget;
 
 Sphere skyboxSphere(20, 20);
@@ -228,9 +231,8 @@ const float giroEclipse = 0.5f;
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes);
-void keyCallback(GLFWwindow *window, int key, int scancode, int action,
-		int mode);
-void scrollCallback(GLFWwindow *window, double xoffset, double yoffset); // agregado en clase
+void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
+void scrollCallback(GLFWwindow *window, double xoffset, double yoffset); // agregado en clase (practica 6)
 void mouseCallback(GLFWwindow *window, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow *window, int button, int state, int mod);
 void init(int width, int height, std::string strTitle, bool bFullScreen);
@@ -274,7 +276,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
-	glfwSetScrollCallback(window, scrollCallback); // agregado en clase
+	glfwSetScrollCallback(window, scrollCallback); // agregado en clase (practica 6)
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
 	// Init glew
@@ -414,7 +416,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
 
-	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
+	// Camaras (practica 6)
+	TP_Camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
+	TP_Camera->setDistanceFromTarget(distanceFromPlayer);
+	TP_Camera->setSensitivity(1.0);
 	
 	// Carga de texturas para el skybox
 	Texture skyboxTexture = Texture("");
@@ -749,10 +754,10 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action,
 	}
 }
 
-// agregado en clase
+// Cámara (practica 6)
 void scrollCallback(GLFWwindow *window, double xoffset, double yoffset){ 
 	distanceFromPlayer -= yoffset;
-	camera->setDistanceFromTarget(distanceFromPlayer);
+	TP_Camera->setDistanceFromTarget(distanceFromPlayer);
 }
 
 void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
@@ -784,6 +789,24 @@ bool processInput(bool continueApplication) {
 		return false;
 	}
 
+	//Control de camara (practica 6)
+	//Control_Left + K alterna el modo de camara
+	if(glfwGetKey(window,GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && glfwGetKey(window,GLFW_KEY_K) == GLFW_PRESS && enableSwitchCam){
+		enableSwitchCam = false;
+		isFPC = !isFPC;
+		std::cout << "Switch Camera" << std::endl;
+	}else if(glfwGetKey(window, GLFW_KEY_K) == GLFW_RELEASE) //Permite un solo cambio hasta liberar K
+		enableSwitchCam = true; //Permitiendo cambiarla sin despegar el Control_Left
+
+	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+		TP_Camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
+	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+		TP_Camera->mouseMoveCamera(0.0, offsetY, deltaTime);
+
+	offsetX = 0;
+	offsetY = 0;
+
+
 	/*if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		camera->moveFrontCamera(true, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -794,13 +817,6 @@ bool processInput(bool continueApplication) {
 		camera->moveRightCamera(true, deltaTime);
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		camera->mouseMoveCamera(offsetX, offsetY, deltaTime);*/
-	// movimiento de cámara (practica 6)
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT))
-		camera->mouseMoveCamera(offsetX, 0.0, deltaTime);
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT))
-		camera->mouseMoveCamera(0.0, offsetY, deltaTime);
-	offsetX = 0;
-	offsetY = 0;
 
 	// Seleccionar modelo
 	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
@@ -937,10 +953,12 @@ bool processInput(bool continueApplication) {
 	// Among us (practica 6)
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		modelMatrixAmongUs = glm::rotate(modelMatrixAmongUs, 0.1f, glm::vec3(0, 1, 0));
+		//camera->mouseMoveCamera(-3.0f, 0, deltaTime);
 		amongUsAnimationIndex = 0;
 	}
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
 		modelMatrixAmongUs = glm::rotate(modelMatrixAmongUs, -0.1f, glm::vec3(0, 1, 0));
+		//camera->mouseMoveCamera(3.0f, 0, deltaTime);
 		amongUsAnimationIndex = 0;
 	}
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
@@ -958,6 +976,11 @@ bool processInput(bool continueApplication) {
 
 void applicationLoop() {
 	bool psi = true;
+
+	// Cámara (practica 6)
+	glm::vec3 axis;
+	glm::vec3 target;
+	float angleTarget;
 
 	modelMatrixEclipse = glm::translate(modelMatrixEclipse, glm::vec3(27.5, 0, 30.0));
 	modelMatrixEclipse = glm::rotate(modelMatrixEclipse, glm::radians(180.0f), glm::vec3(0, 1, 0));
@@ -1000,10 +1023,6 @@ void applicationLoop() {
 
 	lastTime = TimeManager::Instance().GetTime();
 
-	// agregado en clase
-	camera->setSensitivity(1.2);
-	camera->setDistanceFromTarget(distanceFromPlayer);
-
 	while (psi) {
 		currTime = TimeManager::Instance().GetTime();
 		if(currTime - lastTime < 0.016666667){
@@ -1022,7 +1041,41 @@ void applicationLoop() {
 		std::vector<glm::mat4> matrixBuzz;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Seleccion de modelo que enfocará la cámara (practica 6)
+		// Cámara (practica 6)
+ 		glm::mat4 cameraMatrix;
+
+		if(isFPC){
+			cameraMatrix = glm::translate(modelMatrixAmongUs,glm::vec3(0, 4.0f, 0.5f));
+			//cameraMatrix = glm::rotate(cameraMatrix, glm::radians(180.0f) , glm::vec3(0.0f,1.0f,0.0f));
+		}else
+			cameraMatrix = glm::translate(modelMatrixAmongUs,glm::vec3(0, 2.0f, 0));
+
+		axis = glm::axis(glm::quat_cast(cameraMatrix));
+		angleTarget = glm::angle(glm::quat_cast(cameraMatrix));
+		target = cameraMatrix[3];
+		
+
+		if(std::isnan(angleTarget))
+			angleTarget = 0.0;
+		if(axis.y < 0)
+			angleTarget = -angleTarget;
+
+		//Alternativa entre camaras
+		glm::mat4 view;
+		if(isFPC){
+			FP_Camera->setPosition(target);
+			//FP_Camera->setAngleTarget(*glm::value_ptr(cameraMatrix[2]));
+			FP_Camera->updateCamera();
+			view = FP_Camera->getViewMatrix();
+			//view[2] = -cameraMatrix[2];
+		}else{
+			TP_Camera->setCameraTarget(target);
+			TP_Camera->setAngleTarget(angleTarget);
+			TP_Camera->updateCamera();
+			view = TP_Camera->getViewMatrix();
+		}
+
+		/* Seleccion de modelo que enfocará la cámara (practica 6)
 		if (modelSelected == 1)
 			positionTarget = modelMatrixDart[3];
 		else if (modelSelected == 2 || modelSelected == 0)
@@ -1030,7 +1083,7 @@ void applicationLoop() {
 		camera->setCameraTarget(positionTarget);
 		camera->setAngleTarget(angleTarget);
 		camera->updateCamera();
-		glm::mat4 view = camera->getViewMatrix();
+		glm::mat4 view = camera->getViewMatrix();*/
 
 		//proyección
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f),
@@ -1059,13 +1112,19 @@ void applicationLoop() {
 		/*******************************************
 		 * Propiedades Luz direccional
 		 *******************************************/
-		shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
+		if(isFPC)
+			shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(FP_Camera->getPosition()));
+		else
+			shaderMulLighting.setVectorFloat3("viewPos", glm::value_ptr(TP_Camera->getPosition()));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
 		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.4, 0.4, 0.4)));
 		shaderMulLighting.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
 
-		shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
+		if(isFPC)
+			shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(FP_Camera->getPosition()));
+		else
+			shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(TP_Camera->getPosition()));
 		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.4, 0.4, 0.4)));
