@@ -45,10 +45,15 @@
 // Include Colision headers functions
 #include "Headers/Colisiones.h"
 
+// OpenAL include
+#include <AL/alut.h>
+
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
 int screenWidth;
 int screenHeight;
+
+const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
 GLFWwindow *window;
 
@@ -216,8 +221,6 @@ float rotHelHelBack = 0.0;
 // Var animate lambo dor
 int stateDoor = 0;
 float dorRotCount = 0.0;
-float rotWheelsX = 0.0;
-float rotWheelsY = 0.0;
 
 // Lamps position
 std::vector<glm::vec3> lamp1Position = {
@@ -260,6 +263,40 @@ std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> > col
 // Variables animacion maquina de estados eclipse
 const float avance = 0.1;
 const float giroEclipse = 0.5f;
+float rotWheelsX = 0.0;
+float rotWheelsY = 0.0;
+
+// OpenAL Defines
+#define NUM_BUFFERS 3
+#define NUM_SOURCES 3
+#define NUM_ENVIRONMENTS 1
+// Listener
+ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
+ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
+ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
+// Source 0
+ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
+ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
+// Source 1
+ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
+ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
+// Source 2
+ALfloat source2Pos[] = { 2.0, 0.0, 0.0 };
+ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
+// Buffers
+ALuint buffer[NUM_BUFFERS];
+ALuint source[NUM_SOURCES];
+ALuint environment[NUM_ENVIRONMENTS];
+// Configs
+ALsizei size, freq;
+ALenum format;
+ALvoid *data;
+int ch;
+ALboolean loop;
+std::vector<bool> sourcesPlay = {true, true, true};
+
+// Framesbuffers
+//GLuint depthMap, depthMapFBO;
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes);
@@ -773,7 +810,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	/*******************************************
 	 * OpenAL init
 	 *******************************************/
-	/*alutInit(0, nullptr);
+	alutInit(0, nullptr);
 	alListenerfv(AL_POSITION, listenerPos);
 	alListenerfv(AL_VELOCITY, listenerVel);
 	alListenerfv(AL_ORIENTATION, listenerOri);
@@ -796,7 +833,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		exit(2);
 	}
 
-	alGetError();
+	alGetError(); /* clear error */
 	alGenSources(NUM_SOURCES, source);
 
 	if (alGetError() != AL_NO_ERROR) {
@@ -805,7 +842,30 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 	else {
 		printf("init - no errors after alGenSources\n");
-	}*/
+	}
+	alSourcef(source[0], AL_PITCH, 1.0f);
+	alSourcef(source[0], AL_GAIN, 3.0f);
+	alSourcefv(source[0], AL_POSITION, source0Pos);
+	alSourcefv(source[0], AL_VELOCITY, source0Vel);
+	alSourcei(source[0], AL_BUFFER, buffer[0]);
+	alSourcei(source[0], AL_LOOPING, AL_TRUE);
+	alSourcef(source[0], AL_MAX_DISTANCE, 2000);
+
+	alSourcef(source[1], AL_PITCH, 1.0f);
+	alSourcef(source[1], AL_GAIN, 0.5f);
+	alSourcefv(source[1], AL_POSITION, source1Pos);
+	alSourcefv(source[1], AL_VELOCITY, source1Vel);
+	alSourcei(source[1], AL_BUFFER, buffer[1]);
+	alSourcei(source[1], AL_LOOPING, AL_TRUE);
+	alSourcef(source[1], AL_MAX_DISTANCE, 1000);
+
+	alSourcef(source[2], AL_PITCH, 1.0f);
+	alSourcef(source[2], AL_GAIN, 0.3f);
+	alSourcefv(source[2], AL_POSITION, source2Pos);
+	alSourcefv(source[2], AL_VELOCITY, source2Vel);
+	alSourcei(source[2], AL_BUFFER, buffer[2]);
+	alSourcei(source[2], AL_LOOPING, AL_TRUE);
+	alSourcef(source[2], AL_MAX_DISTANCE, 2000);
 }
 
 void destroy() {
@@ -1168,6 +1228,153 @@ bool processInput(bool continueApplication) {
 	return continueApplication;
 }
 
+void prepareScene(){
+
+	terrain.setShader(&shaderTerrain);
+	
+	modelRock.setShader(&shaderMulLighting);
+
+	modelAircraft.setShader(&shaderMulLighting);
+
+	// Eclipse
+	modelEclipseChasis.setShader(&shaderMulLighting);
+	modelEclipseFrontalWheels.setShader(&shaderMulLighting);
+	modelEclipseRearWheels.setShader(&shaderMulLighting);
+
+	// Helicopter
+	modelHeliChasis.setShader(&shaderMulLighting);
+	modelHeliHeli.setShader(&shaderMulLighting);
+	modelHeliHeliBack.setShader(&shaderMulLighting);
+
+	// Lamborginhi
+	modelLambo.setShader(&shaderMulLighting);
+	modelLamboLeftDor.setShader(&shaderMulLighting);
+	modelLamboRightDor.setShader(&shaderMulLighting);
+	modelLamboFrontLeftWheel.setShader(&shaderMulLighting);
+	modelLamboFrontRightWheel.setShader(&shaderMulLighting);
+	modelLamboRearLeftWheel.setShader(&shaderMulLighting);
+	modelLamboRearRightWheel.setShader(&shaderMulLighting);
+
+	// Dart Lego
+	modelDartLegoBody.setShader(&shaderMulLighting);
+	modelDartLegoMask.setShader(&shaderMulLighting);
+	modelDartLegoHead.setShader(&shaderMulLighting);
+	modelDartLegoLeftArm.setShader(&shaderMulLighting);
+	modelDartLegoRightArm.setShader(&shaderMulLighting);
+	modelDartLegoLeftHand.setShader(&shaderMulLighting);
+	modelDartLegoRightHand.setShader(&shaderMulLighting);
+	modelDartLegoLeftLeg.setShader(&shaderMulLighting);
+	modelDartLegoRightLeg.setShader(&shaderMulLighting);
+
+	//Lamp models
+	modelLamp1.setShader(&shaderMulLighting);
+	modelLamp2.setShader(&shaderMulLighting);
+	modelLampPost2.setShader(&shaderMulLighting);
+
+	//Buzz
+	modelBuzzTorso.setShader(&shaderMulLighting);
+	modelBuzzHead.setShader(&shaderMulLighting);
+	modelBuzzLeftArm.setShader(&shaderMulLighting);
+	modelBuzzLeftForeArm.setShader(&shaderMulLighting);
+	modelBuzzLeftHand.setShader(&shaderMulLighting);
+
+	//Grass
+	//modelGrass.setShader(&shaderMulLighting);
+
+	//Mayow
+	mayowModelAnimate.setShader(&shaderMulLighting);
+
+	//Cowboy
+	cowboyModelAnimate.setShader(&shaderMulLighting);
+
+	//Guardian
+	guardianModelAnimate.setShader(&shaderMulLighting);
+
+	//Cyborg
+	cyborgModelAnimate.setShader(&shaderMulLighting);
+
+	// Fountain
+	modelFountain.setShader(&shaderMulLighting);
+}
+
+void prepareDepthScene(){
+
+	/*terrain.setShader(&shaderDepth);
+	
+	modelRock.setShader(&shaderDepth);
+
+	modelAircraft.setShader(&shaderDepth);
+
+	// Eclipse
+	modelEclipseChasis.setShader(&shaderDepth);
+	modelEclipseFrontalWheels.setShader(&shaderDepth);
+	modelEclipseRearWheels.setShader(&shaderDepth);
+
+	// Helicopter
+	modelHeliChasis.setShader(&shaderDepth);
+	modelHeliHeli.setShader(&shaderDepth);
+	modelHeliHeliBack.setShader(&shaderDepth);
+
+	// Lamborginhi
+	modelLambo.setShader(&shaderDepth);
+	modelLamboLeftDor.setShader(&shaderDepth);
+	modelLamboRightDor.setShader(&shaderDepth);
+	modelLamboFrontLeftWheel.setShader(&shaderDepth);
+	modelLamboFrontRightWheel.setShader(&shaderDepth);
+	modelLamboRearLeftWheel.setShader(&shaderDepth);
+	modelLamboRearRightWheel.setShader(&shaderDepth);
+
+	// Dart Lego
+	modelDartLegoBody.setShader(&shaderDepth);
+	modelDartLegoMask.setShader(&shaderDepth);
+	modelDartLegoHead.setShader(&shaderDepth);
+	modelDartLegoLeftArm.setShader(&shaderDepth);
+	modelDartLegoRightArm.setShader(&shaderDepth);
+	modelDartLegoLeftHand.setShader(&shaderDepth);
+	modelDartLegoRightHand.setShader(&shaderDepth);
+	modelDartLegoLeftLeg.setShader(&shaderDepth);
+	modelDartLegoRightLeg.setShader(&shaderDepth);
+
+	//Lamp models
+	modelLamp1.setShader(&shaderDepth);
+	modelLamp2.setShader(&shaderDepth);
+	modelLampPost2.setShader(&shaderDepth);
+
+	//Buzz
+	modelBuzzTorso.setShader(&shaderDepth);
+	modelBuzzHead.setShader(&shaderDepth);
+	modelBuzzLeftArm.setShader(&shaderDepth);
+	modelBuzzLeftForeArm.setShader(&shaderDepth);
+	modelBuzzLeftHand.setShader(&shaderDepth);
+
+	//Grass
+	//modelGrass.setShader(&shaderDepth);
+
+	//Mayow
+	mayowModelAnimate.setShader(&shaderDepth);
+
+	//Cowboy
+	cowboyModelAnimate.setShader(&shaderDepth);
+
+	//Guardian
+	guardianModelAnimate.setShader(&shaderDepth);
+
+	//Cyborg
+	cyborgModelAnimate.setShader(&shaderDepth);
+
+	// Fountain
+	modelFountain.setShader(&shaderDepth);*/
+}
+
+void renderSolidScene(){
+}
+
+void renderAlphaScene(bool render = true){
+}
+
+void renderScene(){
+}
+
 void applicationLoop() {
 	bool psi = true;
 
@@ -1217,6 +1424,8 @@ void applicationLoop() {
 	lastTime = TimeManager::Instance().GetTime();
 
 	textureActivaID = textureInit1ID;
+
+	glm::vec3 lightPos = glm::vec3(10.0, 10.0, -10.0);
 
 	while (psi) {
 		currTime = TimeManager::Instance().GetTime();
@@ -1303,7 +1512,7 @@ void applicationLoop() {
 		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.4, 0.4, 0.4)));
-		shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
+		//shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
 
 		/*******************************************
 		 * Propiedades SpotLights
@@ -1570,7 +1779,7 @@ void applicationLoop() {
 		modelMatrixMayowBody = glm::scale(modelMatrixMayowBody, glm::vec3(0.021f));
 		mayowModelAnimate.setAnimationIndex(animationMayowIndex);
 		mayowModelAnimate.render(modelMatrixMayowBody);
-		animationMayowIndex = 1;
+		//animationMayowIndex = 1;
 
 		modelMatrixCowboy[3][1] = terrain.getHeightTerrain(modelMatrixCowboy[3][0], modelMatrixCowboy[3][2]);
 		glm::mat4 modelMatrixCowboyBody = glm::mat4(modelMatrixCowboy);
@@ -1725,20 +1934,7 @@ void applicationLoop() {
 			sphereCollider.render(matrixCollider);
 		}
 
-		glm::mat4 modelMatrixRayMay = glm::mat4(modelMatrixMayow);
-		modelMatrixRayMay = glm::translate(modelMatrixRayMay, glm::vec3(0, 1, 0));
-		float maxDistanceRay = 10.0;
-		glm::vec3 rayDirection = modelMatrixRayMay[2];
-		glm::vec3 ori = modelMatrixRayMay[3];
-		glm::vec3 rmd = ori + rayDirection * (maxDistanceRay / 2.0f);
-		glm::vec3 targetRay = ori + rayDirection * maxDistanceRay;
-		modelMatrixRayMay[3] = glm::vec4(rmd, 1.0);
-		modelMatrixRayMay = glm::rotate(modelMatrixRayMay, glm::radians(90.0f), 
-			glm::vec3(1, 0, 0));
-		modelMatrixRayMay = glm::scale(modelMatrixRayMay, 
-			glm::vec3(0.05, maxDistanceRay, 0.05));
-		rayModel.render(modelMatrixRayMay);
-
+		/**********Render de transparencias***************/
 		/**********
 		 * Update the position with alpha objects
 		 */
@@ -1816,7 +2012,7 @@ void applicationLoop() {
 		boxIntro.render();
 		glDisable(GL_BLEND);
 
-		modelText->render("Texto en OpenGL", -1, 0);
+		modelText->render("Texto en OpenGL", -1, 0, 1, 0, 0, 24);
 
 		/*********************Prueba de colisiones****************************/
 		for (std::map<std::string,
@@ -1894,6 +2090,20 @@ void applicationLoop() {
 				}
 			}
 		}
+
+		glm::mat4 modelMatrixRayMay = glm::mat4(modelMatrixMayow);
+		modelMatrixRayMay = glm::translate(modelMatrixRayMay, glm::vec3(0, 1, 0));
+		float maxDistanceRay = 10.0;
+		glm::vec3 rayDirection = modelMatrixRayMay[2];
+		glm::vec3 ori = modelMatrixRayMay[3];
+		glm::vec3 rmd = ori + rayDirection * (maxDistanceRay / 2.0f);
+		glm::vec3 targetRay = ori + rayDirection * maxDistanceRay;
+		modelMatrixRayMay[3] = glm::vec4(rmd, 1.0);
+		modelMatrixRayMay = glm::rotate(modelMatrixRayMay, glm::radians(90.0f), 
+			glm::vec3(1, 0, 0));
+		modelMatrixRayMay = glm::scale(modelMatrixRayMay, 
+			glm::vec3(0.05, maxDistanceRay, 0.05));
+		rayModel.render(modelMatrixRayMay);
 
 		std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::
 			iterator itSBB;
@@ -2110,8 +2320,63 @@ void applicationLoop() {
 		// Constantes de animaciones
 		rotHelHelY += 0.5;
 		rotHelHelBack += 0.5;
+		animationMayowIndex = 1;
 
 		glfwSwapBuffers(window);
+
+		/****************************+
+		 * Open AL sound data
+		 */
+		source0Pos[0] = modelMatrixFountain[3].x;
+		source0Pos[1] = modelMatrixFountain[3].y;
+		source0Pos[2] = modelMatrixFountain[3].z;
+		alSourcefv(source[0], AL_POSITION, source0Pos);
+
+		source1Pos[0] = modelMatrixGuardian[3].x;
+		source1Pos[1] = modelMatrixGuardian[3].y;
+		source1Pos[2] = modelMatrixGuardian[3].z;
+		alSourcefv(source[1], AL_POSITION, source1Pos);
+		
+		source2Pos[0] = modelMatrixDart[3].x;
+		source2Pos[1] = modelMatrixDart[3].y;
+		source2Pos[2] = modelMatrixDart[3].z;
+		alSourcefv(source[2], AL_POSITION, source2Pos);
+
+		// Listener for the Thris person camera
+		listenerPos[0] = modelMatrixMayow[3].x;
+		listenerPos[1] = modelMatrixMayow[3].y;
+		listenerPos[2] = modelMatrixMayow[3].z;
+		alListenerfv(AL_POSITION, listenerPos);
+
+		glm::vec3 upModel = glm::normalize(modelMatrixMayow[1]);
+		glm::vec3 frontModel = glm::normalize(modelMatrixMayow[2]);
+
+		listenerOri[0] = frontModel.x;
+		listenerOri[1] = frontModel.y;
+		listenerOri[2] = frontModel.z;
+		listenerOri[3] = upModel.x;
+		listenerOri[4] = upModel.y;
+		listenerOri[5] = upModel.z;
+
+		// Listener for the First person camera
+		// listenerPos[0] = camera->getPosition().x;
+		// listenerPos[1] = camera->getPosition().y;
+		// listenerPos[2] = camera->getPosition().z;
+		// alListenerfv(AL_POSITION, listenerPos);
+		// listenerOri[0] = camera->getFront().x;
+		// listenerOri[1] = camera->getFront().y;
+		// listenerOri[2] = camera->getFront().z;
+		// listenerOri[3] = camera->getUp().x;
+		// listenerOri[4] = camera->getUp().y;
+		// listenerOri[5] = camera->getUp().z;
+		alListenerfv(AL_ORIENTATION, listenerOri);
+
+		for(unsigned int i = 0; i < sourcesPlay.size(); i++){
+			if(sourcesPlay[i]){
+				sourcesPlay[i] = false;
+				alSourcePlay(source[i]);
+			}
+		}
 	}
 }
 
