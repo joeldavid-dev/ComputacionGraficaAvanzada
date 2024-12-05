@@ -361,7 +361,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	mayowModelAnimate.setShader(&shaderMulLighting);
 	
 	// Cowboy
-	cowboyModelAnimate.loadModel("../models/cowboy/Character Running.fbx");
+	//cowboyModelAnimate.loadModel("../models/alien normal 1/alien.fbx");
+	//cowboyModelAnimate.loadModel("../models/swat/Swat.fbx");
+	cowboyModelAnimate.loadModel("../models/fogata/fogata.fbx");
 	cowboyModelAnimate.setShader(&shaderMulLighting);
 
 	// Guardian
@@ -1150,8 +1152,8 @@ void applicationLoop() {
 		// Ajuste al terreno
 		modelMatrixCowboy[3][1] = terrain.getHeightTerrain(modelMatrixCowboy[3][0], modelMatrixCowboy[3][2]);
 		glm::mat4 modelMatrixCowboyBody = glm::mat4(modelMatrixCowboy);
-		modelMatrixCowboyBody = glm::scale(modelMatrixCowboyBody, glm::vec3(0.0021f));
-		cowboyModelAnimate.render(modelMatrixCowboyBody);
+		modelMatrixCowboyBody = glm::scale(modelMatrixCowboyBody, glm::vec3(0.05f));
+		cowboyModelAnimate.render(modelMatrixCowboy);
 
 		// Ajuste al terreno
 		modelMatrixGuardian[3][1] = terrain.getHeightTerrain(modelMatrixGuardian[3][0], modelMatrixGuardian[3][2]);
